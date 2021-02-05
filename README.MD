@@ -4,18 +4,28 @@
 
 ##### Overview
 
-用 Node 编写的小工具,自动在React文件引入i18n,用正则匹配替换存在的文本,
+用 Node 编写的小工具,自动在React项目文件引入i18n(react-i18next),用正则匹配替换存在的文本,React组件只支持.tsx和.jsx,不支持.js后缀的组件
+
+##### Start 
+
+安装依赖
+
+```
+$ npm install 
+or
+$ yarn
+```
 
 
 
 ##### Usage
 
-在EXCEL编辑好翻译文本,生成数组格式的文本,具体格式见目录 assets/lang 下的文件
+在EXCEL编辑好翻译文本,生成数组格式的文本,具体格式见目录 ./mapping 下的文件
 
 ```
 [
-["test","测试文本","test text"],
-["testAttr","测试属性","test attrs"]
+    ["test","测试文本","test text"],
+    ["testAttr","测试属性","test attrs"]
 ]
 
 ```
@@ -24,9 +34,9 @@
 
 可以使用在线工具生成 : 
 
-[EXCEL 转 JSON 工具]: http://www.bejson.com/json/col2json/
+[EXCEL 转 JSON 工具](http://www.bejson.com/json/col2json/ )
 
-复制JSON文本选择转换成数组
+复制EXCEL文本选择转换成数组
 
 用命令行运行根目录下的 formatJson.py 可生成 i18n 使用的有命名空间的 JSON 文件(需安装Python环境),具体的格式可以自行运行生成查看 
 
@@ -40,11 +50,11 @@ py formatJson.py
 export default {
     mappingPath:'./mapping',//映射的文本目录
     rootPath:'',//指定项目根目录 在命令行带 -u 参数时有效
-    sourcePath:'./src',//源文件目录 可以为文件也可以为文件夹 文件夹则递归遍历所有子文件
     distPath:'',//设置输出路径
-    defaultDistPath:'./output/',//默认输出路径,在没有distPath为空时使用
+    defaultDistPath:'./output/',//默认输出路径,在distPath为空时使用
     includesFiles:['.jsx','tsx','js','ts'],//要替换的文件格式,参数之外的文件直接复制不作替换修改
 }
+
 
 ```
 
@@ -54,7 +64,7 @@ export default {
 
   --input 的缩写
 
-  输入的源文件
+  输入的源文件路径,可以为文件也可以为文件夹 文件夹则递归遍历所有子文件
 
 - -c 
 
@@ -130,7 +140,7 @@ Node main.js -i Save.tsx -m test
 
 输出 
 
- outPut/Save.tsx
+ output/Save.tsx
 
 ```
 import i18n from 'i18next'
