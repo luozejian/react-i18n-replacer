@@ -1,0 +1,4 @@
+[
+["test","测试文本","test text"],
+["testAttr","测试属性","test attrs"]
+]
