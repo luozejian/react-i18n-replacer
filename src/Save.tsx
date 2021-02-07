@@ -10,7 +10,7 @@ interface ISaveProps {
 const Save: React.FC<ISaveProps> = (props) => {
     return (
         <div testAttr={i18n.t('test.testAttr')}>
-            {i18n.t('test.test')}
+           {i18n.t('test.test')}
         </div>
     )
 }

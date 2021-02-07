@@ -327,7 +327,8 @@ function i18nReplacer(pathName) {
                     } else {
                         if (!fs.existsSync(path.parse(finalDistPath).dir)) {//文件夹不存在
                             try {
-                                fs.mkdirSync(path.parse(finalDistPath).dir)
+                                // fs.mkdirSync(path.parse(finalDistPath).dir)
+                                mkdirsSync(path.parse(finalDistPath).dir)
                             } catch (err) {
                                 console.log('新建文件夹失败')
                             }
@@ -336,10 +337,9 @@ function i18nReplacer(pathName) {
                         try {
                             // copy(sourcePath,distPath)
                             fs.appendFileSync(finalDistPath, sourceString, 'utf8');
-                            // fs.writeFileSync(disPath, sourceString, 'utf8')
                             console.log('文件创建成功')
                         } catch (err) {
-                            console.log(err)
+                            // console.log(err)
                             console.log('文件创建错误xxx')
                             /* 处理错误 */
                         }
@@ -408,7 +408,8 @@ function i18nReplacer(pathName) {
                     } else {
                         if (!fs.existsSync(path.parse(finalDistPath).dir)) {//文件夹不存在
                             try {
-                                fs.mkdirSync(path.parse(finalDistPath).dir)
+                                // fs.mkdirSync(path.parse(finalDistPath).dir)
+                                mkdirsSync(path.parse(finalDistPath).dir)
                             } catch (err) {
                                 console.log('新建文件夹失败')
                             }
