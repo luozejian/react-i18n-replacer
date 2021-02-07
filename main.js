@@ -214,13 +214,19 @@ const replacerCommand = {
     },
     JSXText(sourceString, chineseString, variableName, shouldImportI18n) {
         //匹配开始和结束标签
+        const jsxWithSingleQuoteReg="(>[^<]*?)" + `\'(${chineseString})\'` + "([^<]*?<\/)"
+        const jsxWithDoubleQuoteReg="(>[^<]*?)" + `\"(${chineseString})\"` + "([^<]*?<\/)"
         // const jsxTextRegPre = "(<([\\S]+?)[\\s\\S]*?>[\\s\\S]*?)" //example:<div>文本<...
-        const jsxTextTotalReg = "(>[^<]*?)" + `(${chineseString})` + "([^<]*?<\/)"
+        const jsxTextReg = "(>[^<]*?)" + `(${chineseString})` + "([^<]*?<\/)"
         // const jsxTextTotalReg = jsxTextRegPre + `(${chineseString})` + "([\\s\\S]*<[\\s]*?\/\\2[\\s]*>)"
-        const jsxTextTotalRegExp = new RegExp(jsxTextTotalReg, 'g')
-        // console.log(jsxTextTotalRegExp)
-        if (jsxTextTotalRegExp.test(sourceString)) {
-            // console.log('JSXText ' + chineseString)
+        const jsxTextTotalRegExp = new RegExp(jsxTextReg, 'g')
+        const jsxWithSingleQuoteRegExp = new RegExp(jsxWithSingleQuoteReg, 'g')
+        const jsxWithDoubleQuoteRegExp = new RegExp(jsxWithDoubleQuoteReg, 'g')
+        if (jsxTextTotalRegExp.test(sourceString)||
+            jsxWithSingleQuoteRegExp.test(sourceString)||
+            jsxWithDoubleQuoteRegExp.test(sourceString)
+
+        ) {
             shouldImportI18n = true
         }
         sourceString = //jsx标签中的文本

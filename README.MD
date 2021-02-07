@@ -60,7 +60,7 @@ export default {
 
 ##### 命令行参数
 
-- -i (必需)
+- -i
 
   --input 的缩写
 

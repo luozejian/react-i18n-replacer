@@ -1,4 +1,3 @@
-import i18n from 'i18next'
 import React from 'react'
 
 
@@ -9,8 +8,8 @@ interface ISaveProps {
 
 const Save: React.FC<ISaveProps> = (props) => {
     return (
-        <div testAttr={i18n.t('test.testAttr')}>
-           {i18n.t('test.test')}
+        <div testAttr='测试属性'>
+            测试文本
         </div>
     )
 }
