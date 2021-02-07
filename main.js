@@ -6,8 +6,7 @@ const replaceOptions = require('./options')
 const {
     mappingPath,
     rootPath,
-    sourcePath: rawSourcePath,
-    distPath,
+    distPath: rawDistPath,
     defaultDistPath,
     includesFiles,
 } = replaceOptions
@@ -28,18 +27,18 @@ let argv = yargs
     // .demandOption('m', '请提供映射文件')
     // .demandOption(['i', 'o'], '源文件(-i)和目标文件(-o)选项必填')
     // .demandOption('i', '源文件(-i)选项必填')
-    .default('r', rootPath)
+    // .default('r', rootPath)
     .describe('i', '源文件')
     .describe('o', '目标文件')
     .describe('c', '是否覆盖源文件')
     .describe('r', '项目根目录')
     .argv;
-// console.log(argv)
-// .alias('n', 'useNext')
-// .describe('n', '使用useTranslation方法')
-// const sourcePath=argv.source
-const sourcePath = argv.useRootPath ? argv.r + argv.input : argv.input
-
+const normalizedRootPath = rootPath.replace(/\\/g, '\/')
+const rawSourcePath = argv.input
+const sourcePath = argv.useRootPath ?
+    path.join(rootPath, argv.input) :
+    rawSourcePath
+// console.log(path.parse(sourcePath))
 // argv.useRootPath=rootPath
 // const sourcePath = argv.useRootPath ? rootPath + rawSourcePath : rawSourcePath
 
@@ -48,6 +47,16 @@ let mappings = mappingFiles.map(filePth => {
     return JSON.parse(fs.readFileSync(mappingPath + filePth + mappingFileExt, 'utf8')).sort((a, b) => b[1].length - a[1].length)
 })
 
+function mkdirsSync(dirname) {//递归调用创建文件夹方法
+    if (fs.existsSync(dirname)) {
+        return true;
+    } else {
+        if (mkdirsSync(path.dirname(dirname))) {
+            fs.mkdirSync(dirname);
+            return true;
+        }
+    }
+}
 // console.log(1111)
 
 function copy(sourcePath, distPath) {
@@ -55,9 +64,9 @@ function copy(sourcePath, distPath) {
         fs.copyFileSync(sourcePath, distPath)
     } else {
         try {
-            fs.mkdirSync(path.parse(distPath).dir)
+            mkdirsSync(path.parse(distPath).dir)
             fs.copyFileSync(sourcePath, distPath)
-            console.log('文件复制成功')
+            // console.log('文件复制成功')
         } catch (err) {
             console.log('文件复制错误', distPath)
             /* 处理错误 */
@@ -264,20 +273,19 @@ const replacerCommand = {
 // }
 
 function i18nReplacer(pathName) {
-    const {cover} = argv
-    // const targetPath=path.
-    // const distPath = path.join(distPath)
-    // if (fs.existsSync(filePath)) {
-    // }
-    // console.log((sourceString + pathName))
+    const {cover, useRootPath} = argv
     const extName = path.extname(pathName)
-    // const mappingNameSpace = path.basename(mappingPath + argv.mapping).split('.')[0]
-    const sourceDir = path.join('./', path.parse(sourcePath).base).replace(/\\/g, '\/')
-    const defaultDistDir = path.join('./', path.parse(defaultDistPath).base)
-    console.log(sourceDir)
-    const rawDistPath = cover ? sourceDir : defaultDistDir
+    const sourceDir = useRootPath ?
+        path.join(rootPath, path.parse(rawSourcePath).dir).replace(/\\/g, '\/') :
+        path.join('./',
+            path.parse(sourcePath).base).replace(/\\/g, '\/')
 
-    const distPath = pathName.replace(/\\/g, '\/').replace(sourceDir, rawDistPath)
+    const defaultDistDir = rawDistPath ? rawDistPath : defaultDistPath
+
+
+    const finalDistPath = cover ? sourcePath :
+        path.join(defaultDistDir,rawSourcePath)
+    // return
     let sourceString = fs.readFileSync(pathName, 'utf8');
     mappings.forEach((mapping, index) => {
         const mappingNameSpace = path.basename(mappingPath + mappingFiles[index] + mappingFileExt).split('.')[0]
@@ -285,7 +293,7 @@ function i18nReplacer(pathName) {
             let commentArray;
             [sourceString, commentArray] = replacerCommand.replaceComment(sourceString)
 
-            // console.log(matchResult[2])
+            console.log(sourceString)
             if (replaceReg.existChineseReg.test(sourceString)) {//包含中文
                 // 替换注释为占位符
                 // if (/class[\s\S]+extends/.test(sourceString)) { //Class 组件
@@ -312,12 +320,14 @@ function i18nReplacer(pathName) {
                     ) {
                         sourceString = 'import i18n from \'i18next\'\n' + sourceString;
                     }
-                    if (fs.existsSync(distPath)) {
-                        fs.writeFileSync(distPath, sourceString, 'utf8')
+                    if (fs.existsSync(finalDistPath)) {
+                        fs.writeFileSync(finalDistPath, sourceString, 'utf8')
+
+                        console.log('文本替换成功')
                     } else {
-                        if (!fs.existsSync(path.parse(distPath).dir)) {//文件夹不存在
+                        if (!fs.existsSync(path.parse(finalDistPath).dir)) {//文件夹不存在
                             try {
-                                fs.mkdirSync(path.parse(distPath).dir)
+                                fs.mkdirSync(path.parse(finalDistPath).dir)
                             } catch (err) {
                                 console.log('新建文件夹失败')
                             }
@@ -325,7 +335,7 @@ function i18nReplacer(pathName) {
                         }
                         try {
                             // copy(sourcePath,distPath)
-                            fs.appendFileSync(distPath, sourceString, 'utf8');
+                            fs.appendFileSync(finalDistPath, sourceString, 'utf8');
                             // fs.writeFileSync(disPath, sourceString, 'utf8')
                             console.log('文件创建成功')
                         } catch (err) {
@@ -343,7 +353,7 @@ function i18nReplacer(pathName) {
                         // })
                     }
                 } else {//匹配不到中文直接复制
-                    copy(pathName, distPath)
+                    copy(pathName, finalDistPath)
                 }
 
                 // }
@@ -359,7 +369,8 @@ function i18nReplacer(pathName) {
                 //     return
                 // }
             } else {//没有中文直接复制
-                copy(pathName, distPath)
+                console.log(finalDistPath)
+                copy(pathName, finalDistPath)
             }
 
 
@@ -392,12 +403,12 @@ function i18nReplacer(pathName) {
                         sourceString = 'import i18n from \'i18next\'\n' + sourceString;
                     }
 
-                    if (fs.existsSync(distPath)) {
-                        fs.writeFileSync(distPath, sourceString, 'utf8')
+                    if (fs.existsSync(finalDistPath)) {
+                        fs.writeFileSync(finalDistPath, sourceString, 'utf8')
                     } else {
-                        if (!fs.existsSync(path.parse(distPath).dir)) {//文件夹不存在
+                        if (!fs.existsSync(path.parse(finalDistPath).dir)) {//文件夹不存在
                             try {
-                                fs.mkdirSync(path.parse(distPath).dir)
+                                fs.mkdirSync(path.parse(finalDistPath).dir)
                             } catch (err) {
                                 console.log('新建文件夹失败')
                             }
@@ -405,7 +416,7 @@ function i18nReplacer(pathName) {
                         }
                         try {
                             // copy(sourcePath,distPath)
-                            fs.appendFileSync(distPath, sourceString, 'utf8');
+                            fs.appendFileSync(finalDistPath, sourceString, 'utf8');
                             // fs.writeFileSync(disPath, sourceString, 'utf8')
                             console.log('文件创建成功')
                         } catch (err) {
@@ -423,7 +434,7 @@ function i18nReplacer(pathName) {
                         // })
                     }
                 } else {//匹配不到中文直接复制
-                    copy(pathName, distPath)
+                    copy(pathName, finalDistPath)
                 }
 
                 // }
@@ -439,7 +450,7 @@ function i18nReplacer(pathName) {
                 //     return
                 // }
             } else {//没有中文直接复制
-                copy(pathName, distPath)
+                copy(pathName, finalDistPath)
             }
 
 
@@ -465,9 +476,9 @@ fs.stat(sourcePath, (err, stats) => { // 读取文件信息
     }
     mapDir(sourcePath, includesFiles, i18nReplacer, (pathName) => {
         const sourceDir = path.join('./', path.parse(sourcePath).base)
-        const defaultDistDir = path.join('./', path.parse(distPath).base)
-        const rawDistPath = argv.cover ? sourceDir : defaultDistDir
-        const finalDistPath = pathName.replace(sourceDir, rawDistPath)
+        const defaultDistDir = path.join('./', path.parse(rawDistPath).base)
+        const distPath = argv.cover ? sourceDir : defaultDistDir
+        const finalDistPath = pathName.replace(sourceDir, distPath)
         copy(pathName, finalDistPath)
     })
 })

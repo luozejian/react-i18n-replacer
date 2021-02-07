@@ -140,7 +140,7 @@ Node main.js -i Save.tsx -m test
 
 输出 
 
- output/Save.tsx
+ output/src/Save.tsx
 
 ```
 import i18n from 'i18next'
