@@ -6,10 +6,10 @@ interface ISaveProps {
     onSave?: () => void,
 }
 
-let xxxx = ''
+let xxxx = '测试属性'
 const Save: React.FC<ISaveProps> = (props) => {
     return (
-        <div testAttr={`测试属性${xxxx}${xxxx}`}>
+        <div testAttr={xxxx+"测试属性"+''} NIUBI={haha} SHABI="测试属性">
             {xxxx}测试文本
         </div>
     )
