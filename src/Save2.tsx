@@ -1,5 +1,6 @@
 import React from 'react'
 
+import lodash from 'lodash'
 
 interface ISaveProps {
     saveState: string,
@@ -9,7 +10,9 @@ interface ISaveProps {
 let xxxx = '测试属性'
 const Save: React.FC<ISaveProps> = (props) => {
     return (
-        <div testAttr={xxxx+"测试属性"+''} NIUBI={haha} SHABI="测试属性">
+        <div testAttr={xxxx + "测试属性" + ''}
+            NIUBI={haha}
+            SHABI="测试属性">
             {xxxx}测试文本
         </div>
     )

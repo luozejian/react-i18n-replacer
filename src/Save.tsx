@@ -10,7 +10,7 @@ let xxxx = ''
 const Save: React.FC<ISaveProps> = (props) => {
     return (
         <div testAttr={`测试属性${xxxx}${xxxx}`}>
-            {xxxx}测试文本
+            {xxxx}
         </div>
     )
 }

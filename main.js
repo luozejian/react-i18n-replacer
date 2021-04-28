@@ -7,7 +7,7 @@ const {hasStringLiteralJSXAttribute} = require('./visitorCheck')
 // const mapDir = require('./helper').mapDir
 const writeFileSync = require('./helper').writeFileSync
 const replaceOptions = require('./options')
-const {parse} = require("@babel/core")
+const {parse, transformSync, transform, transformFromAst} = require("@babel/core")
 const generate = require("@babel/generator").default
 const traverse = require("@babel/traverse").default
 const t = require('@babel/types')
@@ -333,7 +333,7 @@ function i18nReplacer(pathName) {
     const finalDistPath = cover ? sourcePath :
         path.join(defaultDistDir, rawSourcePath)
     // return
-    console.log(path.parse(finalDistPath).dir)
+    // console.log(path.parse(finalDistPath).dir)
 
     let sourceString = fs.readFileSync(pathName, 'utf8');
     mappings.forEach((mapping, index) => {
@@ -346,6 +346,8 @@ function i18nReplacer(pathName) {
 
             // console.log(sourceString)
             if (replaceReg.existChineseReg.test(sourceString)) {//包含中文
+                let shouldImportI18n = false
+                let alreadyImportI18n = false
                 const ast = parse(sourceString, {
                     filename: 'file.tsx',
                     presets: [
@@ -365,8 +367,12 @@ function i18nReplacer(pathName) {
                         '@babel/plugin-syntax-dynamic-import',
                     ],
                 })
-                let shouldImportI18n=false
                 traverse(ast, {
+                    ImportDefaultSpecifier(path) {
+                        if (path.node.local.name === 'i18n') { //判断是否已经引入 i18n 方法
+                            alreadyImportI18n = true
+                        }
+                    },
                     JSXAttribute(path) {
                         console.log('JSXAttribute')
                         const {node} = path
@@ -377,7 +383,7 @@ function i18nReplacer(pathName) {
                                 // const attributeVal = node.value.value
                                 const variableName = `'${mappingNameSpace}.${mapping[i][0]}'`
                                 if (replacerCommand.test(node.value.value, chineseString)) {
-                                    shouldImportI18n=true
+                                    shouldImportI18n = true
                                     path.node.name = (t.jsxIdentifier(attributeName))
                                     // console.log((t.jsxExpressionContainer(path.node.value))).node
                                     path.node.value = (t.jsxExpressionContainer(path.node.value))
@@ -392,23 +398,22 @@ function i18nReplacer(pathName) {
                             const variableName = `${mappingNameSpace}.${mapping[i][0]}`
                             // console.log(path)
                             if (replacerCommand.test(path.node.value, chineseString)) {
-                            //     shouldImportI18n=true
+                                //     shouldImportI18n=true
                                 path.replaceWith(t.identifier(`i18n.t('${variableName}')`))
                             }
                         }
                     },
-
-                    JSXExpressionContainer(path) {
-                        const {node} = path
-                        if (hasStringLiteralJSXAttribute(path)) {}
-                    },
+                    // JSXExpressionContainer(path) {
+                    //     const {node} = path
+                    //     if (hasStringLiteralJSXAttribute(path)) {
+                    //     }
+                    // },
                     JSXText(path) {
-
                         for (let i = 0; i < mapping.length; i++) {
                             const chineseString = mapping[i][1]
                             const variableName = `${mappingNameSpace}.${mapping[i][0]}`
                             if (replacerCommand.test(path.node.value, chineseString)) {
-                                shouldImportI18n=true
+                                shouldImportI18n = true
                                 path.node.value = replacerCommand.JSXText(path.node.value, chineseString, variableName)[0]
                             }
                         }
@@ -420,105 +425,66 @@ function i18nReplacer(pathName) {
                             const chineseString = mapping[i][1]
                             const variableName = `${mappingNameSpace}.${mapping[i][0]}`
                             if (replacerCommand.test(path.node.raw, chineseString)) {
-                                shouldImportI18n=true
+                                shouldImportI18n = true
                                 node.value.raw = replacerCommand.templateString(node.value.raw, chineseString, variableName)[0]
                             }
                         }
-                        // if(node.expression.type===''){
-                        //
-                        // }
+
                     },
 
-
                 })
-                traverse(ast,{
-                    enter(){
-                        console.log('enter')
-                    },
-                    ImportDeclaration(path){
-                        if(shouldImportI18n){
 
-                        }
-                    }
-                })
                 const code = generate(ast, {retainLines: true})
 
-                writeFileSync(finalDistPath, code.code)
-                writeFileSync(path.join(path.parse(finalDistPath).dir, 'ast' + fileName + '.json'), JSON.stringify(ast))
-                return
-                // 替换注释为占位符
-                // if (/class[\s\S]+extends/.test(sourceString)) { //Class 组件
-                 shouldImportI18n = false
-                // console.log(sourceString.match(new RegExp(singleQuoteAttributeReg+'类型','g')))
-                for (let i = 0; i < mapping.length; i++) {
-                    const chineseString = mapping[i][1]
-                    const variableName = `${mappingNameSpace}.${mapping[i][0]}`//变量名
-                    ;[sourceString, shouldImportI18n] = replacerCommand.doubleQuoteAttribute(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.singleQuoteAttribute(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.JSXText(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.singleQuoteString(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.doubleQuoteString(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.templateString(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.chinese(sourceString, chineseString, variableName, shouldImportI18n)
-                }
-                // return
-                // [commentArray] = [[]]
-                sourceString = replacerCommand.recoverComment(sourceString, commentArray)
-                if (shouldImportI18n) {
-                    if (!(sourceString.replace(/\s+/g, "")
-                        .includes('import i18n from \'i18next\''.replace(/\s+/g, "")
-                        ))
-                    ) {
-                        sourceString = 'import i18n from \'i18next\'\n' + sourceString;
-                    }
-                    if (fs.existsSync(finalDistPath)) {
-                        fs.writeFileSync(finalDistPath, sourceString, 'utf8')
+                transformFromAst(ast, code.code, {
+                    // sourceMap: true,
+                    // filename: '.tsx',
+                    // ast: true,
+                    // code: true,
+                    // presets: [
+                    //     // [
+                    //     //     '@babel/preset-env',
+                    //     //     {
+                    //     //         modules: false
+                    //     //     }
+                    //     // ],
+                    //     '@babel/preset-react',
+                    //     '@babel/preset-typescript'
+                    // ],
+                    plugins: [
+                        // '@babel/plugin-transform-modules-commonjs',
+                        // 'dynamic-import-node',
+                        '@babel/plugin-proposal-nullish-coalescing-operator',
+                        '@babel/plugin-proposal-optional-chaining',
+                        '@babel/plugin-proposal-class-properties',
+                        // '@babel/plugin-syntax-dynamic-import',
+                        {
 
-                        console.log('文本替换成功')
-                    } else {
-                        if (!fs.existsSync(path.parse(finalDistPath).dir)) {//文件夹不存在
-                            try {
-                                // fs.mkdirSync(path.parse(finalDistPath).dir)
-                                mkdirsSync(path.parse(finalDistPath).dir)
-                            } catch (err) {
-                                console.log('新建文件夹失败')
+                            visitor: {
+                                Program: {},
+                                ImportDeclaration: {
+                                    enter(path) {
+                                        console.log('进入')
+                                    },
+                                    exit(path) {
+                                        if (shouldImportI18n && !alreadyImportI18n) {
+                                            alreadyImportI18n = true
+                                            path.insertBefore(t.importDeclaration(
+                                                [t.importDefaultSpecifier(t.identifier('i18n'))],
+                                                t.stringLiteral('i18n-next')))
+                                        }
+                                    }
+                                },
+
+
                             }
-
                         }
-                        try {
-                            // copy(sourcePath,distPath)
-                            fs.appendFileSync(finalDistPath, sourceString, 'utf8');
-                            console.log('文件创建成功')
-                        } catch (err) {
-                            // console.log(err)
-                            console.log('文件创建错误xxx')
-                            /* 处理错误 */
-                        }
-                        // fs.appendFileSync(disPath,sourceString,function(err){
-                        //     if(err)  {
-                        //         console.log(err);
-                        //     } else {
-                        //         console.log('文件创建成功')
-                        //         fs.writeFileSync(disPath, sourceString, 'utf8')
-                        //     }
-                        // })
-                    }
-                } else {//匹配不到中文直接复制
-                    copy(pathName, finalDistPath)
-                }
+                    ]
+                }, (err, result) => {
+                    writeFileSync(finalDistPath, result.code)
+                    writeFileSync(path.join(path.parse(finalDistPath).dir, 'ast' + fileName + '.json'), JSON.stringify(ast))
+                })
 
-                // }
-                // if (sourceString.includes('React.FC') || /export[\s\S]function/.test(sourceString)) {//函数式组件
-                //     for (let i = 0; i < mapping.length; i++) {
-                //         const chineseString = mapping[i][1]
-                //         console.log('\"' + chineseString + '\"')
-                //         sourceString = sourceString.replace('\"' + chineseString + '\"', `i18n.t(\'${mappingNameSpace}.${mapping[i][0]}\')`)
-                //         sourceString = sourceString.replace('\'' + chineseString + '\'', `i18n.t(\'${mappingNameSpace}.${mapping[i][0]}\')`)
-                //         sourceString = sourceString.replace(chineseString, `i18n.t(\'${mappingNameSpace}.${mapping[i][0]}\')`)
-                //     }
-                //     fs.writeFileSync(pathName.replace(sourceDir, argv.cover ? sourceDir : defaultDistDir), sourceString, 'utf8')
-                //     return
-                // }
             } else {//没有中文直接复制
                 console.log(finalDistPath)
                 copy(pathName, finalDistPath)
@@ -530,78 +496,7 @@ function i18nReplacer(pathName) {
             [sourceString, commentArray] = replacerCommand.replaceComment(sourceString)
 
             if (replaceReg.existChineseReg.test(sourceString)) {//包含中文
-                // 替换注释为占位符
-                // if (/class[\s\S]+extends/.test(sourceString)) { //Class 组件
-                let shouldImportI18n = false
-
-                // console.log(sourceString.match(new RegExp(singleQuoteAttributeReg+'类型','g')))
-                for (let i = 0; i < mapping.length; i++) {
-                    const chineseString = mapping[i][1]
-                    const variableName = `${mappingNameSpace}.${mapping[i][0]}` //变量名
-                    ;[sourceString, shouldImportI18n] = replacerCommand.doubleQuoteString(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.singleQuoteString(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.templateString(sourceString, chineseString, variableName, shouldImportI18n)
-                    ;[sourceString, shouldImportI18n] = replacerCommand.chinese(sourceString, chineseString, variableName, shouldImportI18n)
-                }
-
-                sourceString = replacerCommand.recoverComment(sourceString, commentArray)
-
-                if (shouldImportI18n) {
-                    if (!(sourceString.replace(/\s+/g, "")
-                        .includes('import i18n from \'i18next\''.replace(/\s+/g, "")
-                        ))
-                    ) {
-                        sourceString = 'import i18n from \'i18next\'\n' + sourceString;
-                    }
-
-                    if (fs.existsSync(finalDistPath)) {
-                        fs.writeFileSync(finalDistPath, sourceString, 'utf8')
-                    } else {
-                        if (!fs.existsSync(path.parse(finalDistPath).dir)) {//文件夹不存在
-                            try {
-                                // fs.mkdirSync(path.parse(finalDistPath).dir)
-                                mkdirsSync(path.parse(finalDistPath).dir)
-                            } catch (err) {
-                                console.log('新建文件夹失败')
-                            }
-
-                        }
-                        try {
-                            // copy(sourcePath,distPath)
-                            fs.appendFileSync(finalDistPath, sourceString, 'utf8');
-                            // fs.writeFileSync(disPath, sourceString, 'utf8')
-                            console.log('文件创建成功')
-                        } catch (err) {
-                            console.log(err)
-                            console.error('文件创建错误xxx')
-                            /* 处理错误 */
-                        }
-                        // fs.appendFileSync(disPath,sourceString,function(err){
-                        //     if(err)  {
-                        //         console.log(err);
-                        //     } else {
-                        //         console.log('文件创建成功')
-                        //         fs.writeFileSync(disPath, sourceString, 'utf8')
-                        //     }
-                        // })
-                    }
-                } else {//匹配不到中文直接复制
-                    copy(pathName, finalDistPath)
-                }
-
-                // }
-                // if (sourceString.includes('React.FC') || /export[\s\S]function/.test(sourceString)) {//函数式组件
-                //     for (let i = 0; i < mapping.length; i++) {
-                //         const chineseString = mapping[i][1]
-                //         console.log('\"' + chineseString + '\"')
-                //         sourceString = sourceString.replace('\"' + chineseString + '\"', `i18n.t(\'${mappingNameSpace}.${mapping[i][0]}\')`)
-                //         sourceString = sourceString.replace('\'' + chineseString + '\'', `i18n.t(\'${mappingNameSpace}.${mapping[i][0]}\')`)
-                //         sourceString = sourceString.replace(chineseString, `i18n.t(\'${mappingNameSpace}.${mapping[i][0]}\')`)
-                //     }
-                //     fs.writeFileSync(pathName.replace(sourceDir, argv.cover ? sourceDir : defaultDistDir), sourceString, 'utf8')
-                //     return
-                // }
-            } else {//没有中文直接复制
+                } else {//没有中文直接复制
                 copy(pathName, finalDistPath)
             }
 
