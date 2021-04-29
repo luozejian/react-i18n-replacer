@@ -7,6 +7,7 @@ interface ISaveProps {
 }
 
 let xxxx = ''
+let ccc = ``
 const Save: React.FC<ISaveProps> = (props) => {
     return (
         <div testAttr={`测试属性${xxxx}${xxxx}`}>
@@ -16,3 +17,4 @@ const Save: React.FC<ISaveProps> = (props) => {
 }
 
 export default Save
+

@@ -98,136 +98,6 @@ const replacerCommand = {
     test(sourceString, chineseString) {
         let regExp = new RegExp(chineseString, 'g')
         return regExp.test(sourceString)
-        // sourceString = //jsx 属性 双引号
-        //     sourceString.replace(
-        //         regExp,)
-        // return sourceString
-    },
-    replaceComment(sourceString) {//替换注释
-        const {singleRowCommentReg, multipleRowCommentReg} = replaceReg;
-        // const commentExp = new RegExp(singleRowCommentReg, 'g');
-        const matchResult = sourceString.match(singleRowCommentReg) || []
-        const matchResult2 = sourceString.match(multipleRowCommentReg) || []
-        const commentArray = [...matchResult, ...matchResult2].map((item, index) => {
-            sourceString = sourceString.replace(item, `/*placeholder${index}*/`)
-            return item
-        })
-        return [sourceString, commentArray]
-    },
-    doubleQuoteAttribute(sourceString, chineseString, variableName, shouldImportI18n) {
-        const jsxTagRegPre = "(\\S+?=)\"([^\"]*?)" //example:<div>文本<...
-        const jsxTagRegEnd = "(([^\"]*?))\""
-        const jsxDoubleAttrTotalReg = jsxTagRegPre + chineseString + jsxTagRegEnd
-        const doubleQuoteAttributeRegExp = new RegExp(jsxDoubleAttrTotalReg, 'g')
-        if (doubleQuoteAttributeRegExp.test(sourceString)) {
-            console.log('doubleQuoteAttributeRegExp ' + chineseString)
-            shouldImportI18n = true
-        }
-        sourceString = //jsx 属性 双引号
-            sourceString.replace(
-                doubleQuoteAttributeRegExp,
-                ($0, $1, $2, $3, $4) => {
-
-                    $2 = $2 ? "\"" + $2 + "\"+" : ''
-                    $4 = $4 ? "+\"" + $4 + "\"" : ''
-                    return $1 + '{' + $2 + `i18n.t(\'${variableName}\')` + $4 + '}'
-                }
-            )
-        return [sourceString, shouldImportI18n]
-    },
-    singleQuoteAttribute(sourceString, chineseString, variableName, shouldImportI18n) {
-        const jsxTagRegPre = "(\\S+?=)\'([^\']*?)" //example:<div>文本<...
-        const jsxTagRegEnd = "(([^\']*?))\'"
-        const jsxSingleAttrTotalReg = jsxTagRegPre + chineseString + jsxTagRegEnd
-        const singleQuoteAttributeRegExp = new RegExp(jsxSingleAttrTotalReg, 'g')
-        if (singleQuoteAttributeRegExp.test(sourceString)) {
-            console.log('singleQuoteAttribute ' + chineseString)
-            shouldImportI18n = true
-        }
-        sourceString = //jsx 属性 单引号
-            sourceString.replace(
-                singleQuoteAttributeRegExp,
-                ($0, $1, $2, $3, $4) => {
-                    $2 = $2 ? "\"" + $2 + "\"+" : ''
-                    $4 = $4 ? "+\"" + $4 + "\"" : ''
-                    return $1 + '{' + $2 + `i18n.t(\'${variableName}\')` + $4 + '}'
-                }
-            )
-        return [sourceString, shouldImportI18n]
-    },
-    bracketsAttributeVal(sourceString, chineseString, variableName, shouldImportI18n) {
-        const jsxTagRegPre = "(\\S+?=)\{([\\s\\S]*?)" //example:<div>文本<...
-        const jsxTagRegEnd = "(([^\']*?))\}"
-        const jsxSingleAttrTotalReg = jsxTagRegPre + chineseString + jsxTagRegEnd
-        const singleQuoteAttributeRegExp = new RegExp(jsxSingleAttrTotalReg, 'g')
-        if (singleQuoteAttributeRegExp.test(sourceString)) {
-
-            shouldImportI18n = true
-        }
-        sourceString = //jsx 属性 单引号
-            sourceString.replace(
-                singleQuoteAttributeRegExp,
-                ($0, $1, $2, $3, $4) => {
-                    $2 = $2 ? $2 + "\"+" : ''
-                    $4 = $4 ? "+\"" + $4 : ''
-                    return $1 + '{' + $2 + `i18n.t(\'${variableName}\')` + $4 + '}'
-                }
-            )
-        return [sourceString, shouldImportI18n]
-    },
-    doubleQuoteString(sourceString, chineseString, variableName, shouldImportI18n) {
-        const doubleQuoteStringRegExp = new RegExp('\"([^\"]*?)' + chineseString + '([^\"]*?)\"', 'g')
-        if (doubleQuoteStringRegExp.test(sourceString)) {
-            console.log('doubleQuoteStringRegExp ' + chineseString)
-            shouldImportI18n = true
-        }
-        sourceString = //双引号字符串
-            sourceString.replace(
-                doubleQuoteStringRegExp,
-                ($0, $1, $2) => {
-                    $1 = $1 ? "\"" + $1 + '\"+' : ''
-                    $2 = $2 ? "+\"" + $2 + '\"' : ''
-                    if ($0.includes('\'') || $0.includes('\`')) {
-                        return $0
-                    }
-                    return $1 + `i18n.t(\'${variableName}\')` + $2
-                }
-            )
-
-        return [sourceString, shouldImportI18n]
-    },
-    singleQuoteString(sourceString, chineseString, variableName, shouldImportI18n) {
-        // const singleQuoteStringRegExp=new RegExp('\'' + chineseString + '\'', 'g')
-        // if (singleQuoteStringRegExp.test(sourceString)) {
-        //     shouldImportI18n = true
-        // }
-        //
-        // sourceString=sourceString.replace(
-        //     singleQuoteStringRegExp,
-        //     ($0, $1, $2) => {
-        //         return `i18n.t(\'${variableName}\')`
-        //     })
-
-        const singleQuoteStringRegExp2 = new RegExp('\'([^\']*?)' + chineseString + '([^\']*?)\'', 'g')
-        if (singleQuoteStringRegExp2.test(sourceString)) {
-            console.log('singleQuoteStringRegExp2' + chineseString)
-            shouldImportI18n = true
-        }
-
-        sourceString = sourceString.replace(
-            singleQuoteStringRegExp2,
-            ($0, $1, $2) => {
-                if ($0.includes('\"') || $0.includes('\`')) {
-                    return $0
-                }
-                // console.log($1)
-                // console.log($1 + `i18n.t(\'${variableName}\')` + $2)
-                $1 = $1 ? "\"" + $1 + '\"+' : ''
-                $2 = $2 ? "+\"" + $2 + '\"' : ''
-                return $1 + `i18n.t(\'${variableName}\')` + $2
-            })
-
-        return [sourceString, shouldImportI18n]
     },
     JSXText(sourceString, chineseString, variableName, shouldImportI18n) {
         //匹配开始和结束标签
@@ -298,22 +168,6 @@ const replacerCommand = {
 
         return [sourceString, shouldImportI18n]
     },
-    chinese(sourceString, chineseString, variableName, shouldImportI18n) {
-        if (new RegExp(chineseString, 'g').test(sourceString)) {
-            console.log('sourceString' + chineseString)
-            shouldImportI18n = true
-        }
-        sourceString = sourceString.replace(new RegExp(chineseString, 'g'), `i18n.t(\'${variableName}\')`)
-        return [sourceString, shouldImportI18n]
-    },
-    recoverComment(sourceString, commentArray) {//恢复注释
-        commentArray.forEach((item, index) => {//恢复占位符为原来的字符串
-            // console.log(commentArray[index])
-            sourceString = sourceString.replace(`/*placeholder${index}*/`, commentArray[index])
-        })
-        return sourceString
-    }
-
 }
 
 // }
@@ -338,170 +192,175 @@ function i18nReplacer(pathName) {
     let sourceString = fs.readFileSync(pathName, 'utf8');
     mappings.forEach((mapping, index) => {
         const mappingNameSpace = path.basename(mappingPath + mappingFiles[index] + mappingFileExt).split('.')[0]
-        if (extName === '.tsx' || extName === '.jsx') {
-            // const testSourceString = sourceString
+        // if (extName === '.tsx' || extName === '.jsx') {
+        // const testSourceString = sourceString
 
-            let commentArray;
-            [sourceString, commentArray] = replacerCommand.replaceComment(sourceString)
 
-            // console.log(sourceString)
-            if (replaceReg.existChineseReg.test(sourceString)) {//包含中文
-                let shouldImportI18n = false
-                let alreadyImportI18n = false
-                const ast = parse(sourceString, {
-                    filename: 'file.tsx',
-                    presets: [
-                        [
-                            '@babel/preset-env',
-                            {
-                                modules: false
-                            }
-                        ],
-                        '@babel/preset-react',
-                        '@babel/preset-typescript'
-                    ],
-                    plugins: [
-                        '@babel/plugin-proposal-nullish-coalescing-operator',
-                        '@babel/plugin-proposal-optional-chaining',
-                        '@babel/plugin-proposal-class-properties',
-                        '@babel/plugin-syntax-dynamic-import',
-                    ],
-                })
-                traverse(ast, {
-                    ImportDefaultSpecifier(path) {
-                        if (path.node.local.name === 'i18n') { //判断是否已经引入 i18n 方法
-                            alreadyImportI18n = true
-                        }
-                    },
-                    JSXAttribute(path) {
-                        console.log('JSXAttribute')
-                        const {node} = path
-                        if (hasStringLiteralJSXAttribute(path)) {
-                            for (let i = 0; i < mapping.length; i++) {
-                                const chineseString = mapping[i][1]
-                                const attributeName = node.name.name
-                                // const attributeVal = node.value.value
-                                const variableName = `'${mappingNameSpace}.${mapping[i][0]}'`
-                                if (replacerCommand.test(node.value.value, chineseString)) {
-                                    shouldImportI18n = true
-                                    path.node.name = (t.jsxIdentifier(attributeName))
-                                    // console.log((t.jsxExpressionContainer(path.node.value))).node
-                                    path.node.value = (t.jsxExpressionContainer(path.node.value))
-                                }
-                            }
-                        }
-                    },
-                    StringLiteral(path) {
-                        console.log('StringLiteral')
-                        for (let i = 0; i < mapping.length; i++) {
-                            const chineseString = mapping[i][1]
-                            const variableName = `${mappingNameSpace}.${mapping[i][0]}`
-                            // console.log(path)
-                            if (replacerCommand.test(path.node.value, chineseString)) {
-                                //     shouldImportI18n=true
-                                path.replaceWith(t.identifier(`i18n.t('${variableName}')`))
-                            }
-                        }
-                    },
-                    // JSXExpressionContainer(path) {
-                    //     const {node} = path
-                    //     if (hasStringLiteralJSXAttribute(path)) {
-                    //     }
-                    // },
-                    JSXText(path) {
-                        for (let i = 0; i < mapping.length; i++) {
-                            const chineseString = mapping[i][1]
-                            const variableName = `${mappingNameSpace}.${mapping[i][0]}`
-                            if (replacerCommand.test(path.node.value, chineseString)) {
-                                shouldImportI18n = true
-                                path.node.value = replacerCommand.JSXText(path.node.value, chineseString, variableName)[0]
-                            }
-                        }
-                    },
-                    TemplateElement(path) {
-                        const {node} = path;
-                        // console.log(node.value)
-                        for (let i = 0; i < mapping.length; i++) {
-                            const chineseString = mapping[i][1]
-                            const variableName = `${mappingNameSpace}.${mapping[i][0]}`
-                            if (replacerCommand.test(path.node.raw, chineseString)) {
-                                shouldImportI18n = true
-                                node.value.raw = replacerCommand.templateString(node.value.raw, chineseString, variableName)[0]
-                            }
-                        }
-
-                    },
-
-                })
-
-                const code = generate(ast, {retainLines: true})
-
-                transformFromAst(ast, code.code, {
-                    // sourceMap: true,
-                    // filename: '.tsx',
-                    // ast: true,
-                    // code: true,
-                    // presets: [
-                    //     // [
-                    //     //     '@babel/preset-env',
-                    //     //     {
-                    //     //         modules: false
-                    //     //     }
-                    //     // ],
-                    //     '@babel/preset-react',
-                    //     '@babel/preset-typescript'
-                    // ],
-                    plugins: [
-                        // '@babel/plugin-transform-modules-commonjs',
-                        // 'dynamic-import-node',
-                        '@babel/plugin-proposal-nullish-coalescing-operator',
-                        '@babel/plugin-proposal-optional-chaining',
-                        '@babel/plugin-proposal-class-properties',
-                        // '@babel/plugin-syntax-dynamic-import',
+        // console.log(sourceString)
+        if (replaceReg.existChineseReg.test(sourceString)) {//包含中文
+            let shouldImportI18n = false
+            let alreadyImportI18n = false
+            const ast = parse(sourceString, {
+                filename: 'file.tsx',
+                presets: [
+                    [
+                        '@babel/preset-env',
                         {
-
-                            visitor: {
-                                Program: {},
-                                ImportDeclaration: {
-                                    enter(path) {
-                                        console.log('进入')
-                                    },
-                                    exit(path) {
-                                        if (shouldImportI18n && !alreadyImportI18n) {
-                                            alreadyImportI18n = true
-                                            path.insertBefore(t.importDeclaration(
-                                                [t.importDefaultSpecifier(t.identifier('i18n'))],
-                                                t.stringLiteral('i18n-next')))
-                                        }
-                                    }
-                                },
-
-
+                            modules: false
+                        }
+                    ],
+                    '@babel/preset-react',
+                    '@babel/preset-typescript'
+                ],
+                plugins: [
+                    '@babel/plugin-proposal-nullish-coalescing-operator',
+                    '@babel/plugin-proposal-optional-chaining',
+                    '@babel/plugin-proposal-class-properties',
+                    '@babel/plugin-syntax-dynamic-import',
+                ],
+            })
+            traverse(ast, {
+                ImportDefaultSpecifier(path) {
+                    if (path.node.local.name === 'i18n') { //判断是否已经引入 i18n 方法
+                        alreadyImportI18n = true
+                    }
+                },
+                JSXAttribute(path) {
+                    const {node} = path
+                    if (hasStringLiteralJSXAttribute(path)) {
+                        for (let i = 0; i < mapping.length; i++) {
+                            const chineseString = mapping[i][1]
+                            const attributeName = node.name.name
+                            // const attributeVal = node.value.value
+                            const variableName = `'${mappingNameSpace}.${mapping[i][0]}'`
+                            if (replacerCommand.test(node.value.value, chineseString)) {
+                                shouldImportI18n = true
+                                path.node.name = (t.jsxIdentifier(attributeName))
+                                // console.log((t.jsxExpressionContainer(path.node.value))).node
+                                path.node.value = (t.jsxExpressionContainer(path.node.value))
                             }
                         }
-                    ]
-                }, (err, result) => {
-                    writeFileSync(finalDistPath, result.code)
-                    writeFileSync(path.join(path.parse(finalDistPath).dir, 'ast' + fileName + '.json'), JSON.stringify(ast))
-                })
+                    }
+                },
+                StringLiteral(path) {
+                    for (let i = 0; i < mapping.length; i++) {
+                        const chineseString = mapping[i][1]
+                        const variableName = `${mappingNameSpace}.${mapping[i][0]}`
+                        // console.log(path)
+                        if (replacerCommand.test(path.node.value, chineseString)) {
+                            shouldImportI18n = true
+                            path.replaceWith(t.identifier(`i18n.t('${variableName}')`))
+                        }
+                    }
+                },
+                // JSXExpressionContainer(path) {
+                //     const {node} = path
+                //     if (hasStringLiteralJSXAttribute(path)) {
+                //     }
+                // },
+                JSXText(path) {
+                    for (let i = 0; i < mapping.length; i++) {
+                        const chineseString = mapping[i][1]
+                        const variableName = `${mappingNameSpace}.${mapping[i][0]}`
+                        if (replacerCommand.test(path.node.value, chineseString)) {
+                            shouldImportI18n = true
+                            path.node.value = replacerCommand.JSXText(path.node.value, chineseString, variableName)[0]
+                        }
+                    }
+                },
+                TemplateElement(path) {
+                    const {node} = path;
+                    // console.log(node.value)
+                    for (let i = 0; i < mapping.length; i++) {
+                        const chineseString = mapping[i][1]
+                        const variableName = `${mappingNameSpace}.${mapping[i][0]}`
+                        // console.log(path.node.value.raw)
+                        if (replacerCommand.test(path.node.value.raw, chineseString)) {
+                            shouldImportI18n = true
+                            path.node.value.raw= replacerCommand.templateString(node.value.raw, chineseString, variableName)[0]
+                        }
+                    }
 
-            } else {//没有中文直接复制
-                console.log(finalDistPath)
-                copy(pathName, finalDistPath)
-            }
+                },
+
+            })
+
+            const code = generate(ast, {retainLines: true})
+
+            transformFromAst(ast, code.code, {
+                // sourceMap: true,
+                // filename: '.tsx',
+                // ast: true,
+                // code: true,
+                // presets: [
+                //     // [
+                //     //     '@babel/preset-env',
+                //     //     {
+                //     //         modules: false
+                //     //     }
+                //     // ],
+                //     '@babel/preset-react',
+                //     '@babel/preset-typescript'
+                // ],
+                plugins: [
+                    // '@babel/plugin-transform-modules-commonjs',
+                    // 'dynamic-import-node',
+                    '@babel/plugin-proposal-nullish-coalescing-operator',
+                    '@babel/plugin-proposal-optional-chaining',
+                    '@babel/plugin-proposal-class-properties',
+                    // '@babel/plugin-syntax-dynamic-import',
+                    {
+
+                        visitor: {
+                            Program: {
+                                exit(path) {
+                                    console.log(shouldImportI18n)
+                                    if (shouldImportI18n && !alreadyImportI18n) {
+                                        alreadyImportI18n = true;
+                                        path.get("body.0").insertBefore(t.importDeclaration(
+                                            [t.importDefaultSpecifier(t.identifier('i18n'))],
+                                            t.stringLiteral('i18n-next')));
+                                    }
+                                }
+                            },
+                            ImportDeclaration: {
+                                // enter(path) {
+                                //     console.log('进入')
+                                // },
+                                // exit(path) {
+                                //     if (shouldImportI18n && !alreadyImportI18n) {
+                                //         alreadyImportI18n = true
+                                //         path.insertBefore(t.importDeclaration(
+                                //             [t.importDefaultSpecifier(t.identifier('i18n'))],
+                                //             t.stringLiteral('i18n-next')))
+                                //     }
+                                // }
+                            },
 
 
-        } else {
-            let commentArray;
-            [sourceString, commentArray] = replacerCommand.replaceComment(sourceString)
+                        }
+                    }
+                ]
+            }, (err, result) => {
+                writeFileSync(finalDistPath, result.code)
+                writeFileSync(path.join(path.parse(finalDistPath).dir, 'ast-' + fileName + '.json'), JSON.stringify(ast))
+            })
 
-            if (replaceReg.existChineseReg.test(sourceString)) {//包含中文
-                } else {//没有中文直接复制
-                copy(pathName, finalDistPath)
-            }
-
-
+        } else {//没有中文直接复制
+            console.log(finalDistPath)
+            copy(pathName, finalDistPath)
         }
+
+
+        // } else {
+        //
+        //     if (replaceReg.existChineseReg.test(sourceString)) {//包含中文
+        //         } else {//没有中文直接复制
+        //         copy(pathName, finalDistPath)
+        //     }
+        //
+        //
+        // }
     })
     // console.log(rawDistPath)
     // console.log(distPath)
