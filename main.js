@@ -343,7 +343,7 @@ function i18nReplacer(pathName) {
                 ]
             }, (err, result) => {
                 writeFileSync(finalDistPath, result.code)
-                writeFileSync(path.join(path.parse(finalDistPath).dir, 'ast-' + fileName + '.json'), JSON.stringify(ast))
+                // writeFileSync(path.join(path.parse(finalDistPath).dir, 'ast-' + fileName + '.json'), JSON.stringify(ast))
             })
 
         } else {//没有中文直接复制

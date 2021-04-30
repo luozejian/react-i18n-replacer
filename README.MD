@@ -110,7 +110,7 @@ export default {
 
 ##### Example(使用默认配置)
 
- src/Save.tsx
+ src/Test.tsx
 
 ```
 import React from 'react'
@@ -135,12 +135,12 @@ export default Save
 执行
 
 ```
-Node main.js -i Save.tsx -m test
+Node main.js -i Test.tsx -m test
 ```
 
 输出 
 
- output/src/Save.tsx
+ output/src/Test.tsx
 
 ```
 import i18n from 'i18next'

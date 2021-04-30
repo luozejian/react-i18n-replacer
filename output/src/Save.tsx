@@ -4,8 +4,8 @@ interface ISaveProps {
   saveState: string;
   onSave?: () => void;
 }
-let xxxx = '';
-let ccc = ``;
+let xxxx = i18n.t('test.test') + hhhh;
+let ccc = `${i18n.t('test.test')}`;
 
 const Save: React.FC<ISaveProps> = props => {
   return <div testAttr={`${i18n.t('test.testAttr')}${xxxx}${xxxx}`}>
