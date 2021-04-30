@@ -4,7 +4,7 @@
 
 ##### Overview
 
-用 Node 编写的小工具,自动在React项目文件引入i18n(react-i18next),用正则匹配替换存在的文本,React组件只支持.tsx和.jsx,不支持.js后缀的组件
+用 Node 编写的小工具,自动在React项目文件引入i18n(react-i18next),用正则匹配替换存在的文本
 
 ##### Start 
 
